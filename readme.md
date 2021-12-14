@@ -10,7 +10,7 @@ The Pipeline folder contains the main pipeline for running the experiment.
 |---|---|
 | ChordsAndTabs | Contains code for the ultimate guitar scraper and inital chordcaster  |
 | EDA | SNS plots for the Spotify data |   
-| Embeddings | Inital experimen with creating word2vec embeddings  |   
+| Embeddings | Inital experiment with creating word2vec embeddings for chords |   
 | Emotion | Deriving sentiment features from lyrics |
 | LDA | Topic Modeling using gensim with coherence tests |
 | Pipeline | Final pipeline for running experiments |
