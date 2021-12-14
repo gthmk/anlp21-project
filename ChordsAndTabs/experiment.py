@@ -9,7 +9,15 @@ def tabs_search(query):
     ultimate_guitar = 'https://www.ultimate-guitar.com'
     endpoint = ultimate_guitar + '/search.php?search_type=title&order=&value=' + query
 
-    page = requests.get(endpoint)
+    retries = 0
+    while retries < 5:
+        try:
+            page = requests.get(endpoint)
+            break
+        except (Timeout, ConnectionError) as e:
+            retries += 1
+            print("Retry {} for song {}".format(str(retries),str(title_)))
+            continue
 
     if page.status_code == 200:
 
@@ -41,7 +49,7 @@ def tabs_search(query):
         print('[error] Try again in a bit or check if the site is up right now.')
 
 
-def perform_search(raw_query):
+def perform_search(raw_query, track_id):
     query = raw_query.replace(" ", "+")
     result = tabs_search(query)
 
@@ -49,36 +57,53 @@ def perform_search(raw_query):
         (song_name, tab_url_from_search)= result
 
         if song_name and tab_url_from_search:
-            # print("TAB URL",tab_url_from_search)
+            print("TAB URL",tab_url_from_search)
             final_dict['song_name'].append(raw_query)
-            final_dict['tabs'].append(parse_tab_fields_from_url(tab_url_from_search)['chords'])
+            tabs_capo = parse_tab_fields_from_url(tab_url_from_search)
+            final_dict['tabs'].append(tabs_capo['chords'])
+            final_dict['capo'].append(tabs_capo['capo'])
+            final_dict['track_id'].append(track_id)
 
-            print("Parsed : ",parse_tab_fields_from_url(tab_url_from_search))
+            print("Parsed : ", tabs_capo)
 
 
 import csv
-
+import pandas as pd
 
 if __name__ == '__main__':
 
-    filename = "../data/playlist_tracks.csv"
-    output_file = "../data/track_with_tabs.csv"
+    filename = "../data/playlist_tracks2.csv"
+    output_file = "../data/track_with_tabs_new.csv"
 
-    final_dict = {'song_name': [], 'tabs': []}
+    final_dict = {'song_name': [], 'track_id': [], 'tabs': [], 'capo': []}
 
-    track_list = []
+    # with open(filename) as file:
+    #     for index, line in enumerate(file):
+    #         if index == 0:
+    #             continue
+    #         cols = line.split(",")
+    #         print("Song name",cols[5], index)
+    #         track_list.append(cols[5])
 
-    with open(filename) as file:
-        for index, line in enumerate(file):
-            if index == 0:
-                continue
-            cols = line.split(",")
-            track_list.append(cols[4])
+    df = pd.read_csv(filename)
+
+    track_list = list(df['track_name'])
+    track_ids = list(df['track_id'])
+
 
     for index, track in enumerate(track_list):
         if track:
             print("Track",index,track)
-            perform_search(str(track))
+            perform_search(str(track), track_ids[index])
+
+            h = final_dict.keys()
+
+            if index %500 == 0:
+                with open(output_file, 'w', newline='') as csvfile:
+                    csvwriter = csv.writer(csvfile, delimiter=',')
+                    csvwriter.writerow(h)
+                    for row in range(len(final_dict[list(h)[0]])):
+                        csvwriter.writerow([final_dict[key][row] for key in h])
 
     header = final_dict.keys()
     no_rows = len(final_dict[list(header)[0]])
@@ -88,6 +113,5 @@ if __name__ == '__main__':
         csvwriter.writerow(header)
         for row in range(no_rows):
             csvwriter.writerow([final_dict[key][row] for key in header])
-
 
     # perform_search('hey there delilah')

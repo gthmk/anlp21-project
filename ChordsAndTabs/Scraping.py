@@ -105,7 +105,8 @@ def parse_chords_from_url(url):
     song_name = data['store']['page']['data']['tab']['song_name']
 
     # Matching groups (open tag)(chord pitch)(base note {0 or 1})(chord type)(base note {0 or 1})(closing tag)
-    pattern = "(\[ch\])([A-G]+)(\/[A-G]*[b#])*([(?m)|(?m\d)|(?b\d)|(?#\d)|(?maj\d)|(?add\d)|(?sus\d)|(?aug)|(?aug\d)|(?dim)|(?dim\d)]*)(\/[A-G]*[b#])*(\[\/ch\])"
+    pattern = "(\[ch\])([A-G]+)(\/[A-G]*[b#])*([(?m)|(?m\d)|(?b\d)|(?#\d)|(?maj\d)|(?add\d)|(?sus\d)|(?aug)|(?aug\d)|(?dim)|(?min)|(?dim\d)]*)(\/[A-G])*(\[\/ch\])"
+    # (\[ch\])([A-G]+)(\/[A-G]*[b#])*([(?m)|(?m\d)|(?b\d)|(?#\d)|(?maj\d)|(?add\d)|(?sus\d)|(?aug)|(?aug\d)|(?dim)|(?min)|(?dim\d)]*)(\/[A-G]*[b#])*(\/[A-G]*[\w?])*(\[\/ch\])
     prog = re.compile(pattern)
     result = prog.findall(chords)
 
@@ -114,14 +115,16 @@ def parse_chords_from_url(url):
         # Grabbing groups (chord pitch)(base note)(chord type)(base note)
         cleaned_res[i] = result[i][1] + result[i][2] + result[i][3] + result[i][4]
 
-    # # Grabbing Capo info
-    # capo = 0
-    # try:
-    #     capo = data['store']['page']['data']['tab_view']['meta']['capo']
-    # except:
-    #     capo = 0
+    # Grabbing Capo info
+    capo = 0
+    try:
+        capo = data['store']['page']['data']['tab_view']['meta']['capo']
+    except:
+        capo = 0
 
-    return (cleaned_res, song_name)
+    print(cleaned_res)
+
+    return (cleaned_res, song_name, capo)
 
 
 def parse_tab_fields(tab_obj, hit_obj):
@@ -146,17 +149,18 @@ def parse_tab_fields(tab_obj, hit_obj):
 
 
 def parse_tab_fields_from_url(tab_url):
-    chords, song_name = parse_chords_from_url(tab_url)
+    chords, song_name, capo = parse_chords_from_url(tab_url)
     tab_dict = {
         'song_name' : song_name,
         'chords': ','.join(chords),
+        'capo': capo
     }
     return tab_dict
 
 
 def scrape_ultimate_guitar():
 
-    tabs_list = ['https://tabs.ultimate-guitar.com/tab/ed-sheeran/perfect-chords-1956589']
+    tabs_list = ['https://tabs.ultimate-guitar.com/tab/passenger/let-her-go-chords-1137467']
 
     tab_dict_list = []
 
@@ -166,4 +170,4 @@ def scrape_ultimate_guitar():
     return tab_dict_list
 
 
-# print(scrape_ultimate_guitar())
+print(scrape_ultimate_guitar())
